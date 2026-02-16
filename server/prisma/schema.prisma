@@ -1,0 +1,121 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum UserRole {
+  USER
+  ADMIN
+}
+
+enum SessionMode {
+  chat
+  wizard
+}
+
+enum MessageRole {
+  user
+  assistant
+  system
+}
+
+enum MessageStatus {
+  pending
+  streaming
+  done
+  error
+}
+
+model User {
+  id           String   @id @default(uuid())
+  email        String   @unique
+  passwordHash String
+  role         UserRole @default(USER)
+  isBlocked    Boolean  @default(false)
+  createdAt    DateTime @default(now())
+
+  refreshTokens       RefreshToken[]
+  consultationSessions ConsultationSession[]
+
+  @@map("users")
+}
+
+model RefreshToken {
+  id        String    @id @default(uuid())
+  userId    String
+  tokenHash String
+  expiresAt DateTime
+  revokedAt DateTime?
+  createdAt DateTime  @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("refresh_tokens")
+}
+
+model ConsultationSession {
+  id        String      @id @default(uuid())
+  userId    String
+  mode      SessionMode
+  topic     String?
+  title     String?
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
+
+  user     User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  messages Message[]
+  llmLogs  LlmLog[]
+
+  @@map("consultation_sessions")
+}
+
+model Message {
+  id        String        @id @default(uuid())
+  sessionId String
+  role      MessageRole
+  content   String        @db.Text
+  status    MessageStatus @default(pending)
+  createdAt DateTime      @default(now())
+
+  session ConsultationSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+
+  @@map("messages")
+}
+
+model WizardCategory {
+  id          String   @id @default(uuid())
+  title       String
+  description String
+  icon        String
+  schemaJson  String   @db.Text
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+
+  @@map("wizard_categories")
+}
+
+model SystemConfig {
+  id        String   @id @default(uuid())
+  key       String   @unique
+  value     String   @db.Text
+  updatedAt DateTime @updatedAt
+
+  @@map("system_config")
+}
+
+model LlmLog {
+  id           String   @id @default(uuid())
+  sessionId    String
+  model        String
+  status       String
+  latencyMs    Int
+  errorMessage String?  @db.Text
+  createdAt    DateTime @default(now())
+
+  session ConsultationSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+
+  @@map("llm_logs")
+}
