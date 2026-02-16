@@ -11,9 +11,9 @@ export const useAuth = () => {
     mutationFn: authApi.login,
     onSuccess: (data) => {
       localStorage.setItem('accessToken', data.accessToken);
-      localStorage.setItem('refreshToken', data.refreshToken);
+      // refreshToken is stored in httpOnly cookie by the server
       queryClient.invalidateQueries({ queryKey: ['currentUser'] });
-      navigate('/chat');
+      navigate('/chat', { replace: true });
     },
   });
 
@@ -21,9 +21,9 @@ export const useAuth = () => {
     mutationFn: authApi.register,
     onSuccess: (data) => {
       localStorage.setItem('accessToken', data.accessToken);
-      localStorage.setItem('refreshToken', data.refreshToken);
+      // refreshToken is stored in httpOnly cookie by the server
       queryClient.invalidateQueries({ queryKey: ['currentUser'] });
-      navigate('/chat');
+      navigate('/chat', { replace: true });
     },
   });
 
