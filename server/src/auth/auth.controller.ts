@@ -1,4 +1,4 @@
-import { Controller, Post, Body, HttpCode, HttpStatus, Res, Req } from '@nestjs/common';
+import { Controller, Post, Get, Body, HttpCode, HttpStatus, Res, Req } from '@nestjs/common';
 import type { Response, Request } from 'express';
 import { AuthService } from './auth.service';
 import { RegisterDto } from './dto/register.dto';
@@ -62,6 +62,11 @@ export class AuthController {
   async refresh(@Req() request: Request): Promise<{ accessToken: string }> {
     const refreshToken = request.cookies?.refreshToken;
     return this.authService.refresh(refreshToken);
+  }
+
+  @Get('me')
+  async getCurrentUser(@CurrentUser() user: CurrentUserPayload) {
+    return this.authService.getCurrentUser(user.userId);
   }
 
   @Post('logout')

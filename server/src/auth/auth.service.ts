@@ -160,6 +160,27 @@ export class AuthService {
     }
   }
 
+  async getCurrentUser(userId: string) {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: {
+        id: true,
+        email: true,
+        firstName: true,
+        lastName: true,
+        role: true,
+        isBlocked: true,
+        createdAt: true,
+      },
+    });
+
+    if (!user) {
+      throw new UnauthorizedException('User not found');
+    }
+
+    return user;
+  }
+
   async logout(userId: string): Promise<void> {
     await this.prisma.refreshToken.updateMany({
       where: {

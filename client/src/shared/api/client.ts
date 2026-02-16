@@ -14,23 +14,42 @@ export const apiClient = axios.create({
 apiClient.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
     const token = localStorage.getItem('accessToken');
+    console.log('[apiClient] Request:', {
+      url: config.url,
+      method: config.method,
+      hasToken: !!token,
+    });
     if (token && config.headers) {
       config.headers.Authorization = `Bearer ${token}`;
     }
     return config;
   },
   (error: AxiosError) => {
+    console.error('[apiClient] Request error:', error);
     return Promise.reject(error);
   }
 );
 
 // Response interceptor to handle token refresh
 apiClient.interceptors.response.use(
-  (response) => response,
+  (response) => {
+    console.log('[apiClient] Response success:', {
+      url: response.config.url,
+      status: response.status,
+    });
+    return response;
+  },
   async (error: AxiosError) => {
+    console.error('[apiClient] Response error:', {
+      url: error.config?.url,
+      status: error.response?.status,
+      message: error.message,
+    });
+
     const originalRequest = error.config as InternalAxiosRequestConfig & { _retry?: boolean };
 
     if (error.response?.status === 401 && !originalRequest._retry) {
+      console.log('[apiClient] 401 error, attempting token refresh...');
       originalRequest._retry = true;
 
       try {
@@ -42,6 +61,7 @@ apiClient.interceptors.response.use(
         );
 
         const { accessToken } = response.data;
+        console.log('[apiClient] Token refreshed successfully');
         localStorage.setItem('accessToken', accessToken);
 
         if (originalRequest.headers) {
@@ -50,7 +70,9 @@ apiClient.interceptors.response.use(
 
         return apiClient(originalRequest);
       } catch (refreshError) {
+        console.error('[apiClient] Token refresh failed:', refreshError);
         localStorage.removeItem('accessToken');
+        console.log('[apiClient] Redirecting to /login');
         window.location.href = '/login';
         return Promise.reject(refreshError);
       }
