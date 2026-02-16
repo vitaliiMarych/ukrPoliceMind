@@ -35,11 +35,15 @@ export class AuthService {
       data: {
         email: dto.email,
         passwordHash,
+        firstName: dto.firstName,
+        lastName: dto.lastName,
       },
       select: {
         id: true,
         email: true,
         role: true,
+        firstName: true,
+        lastName: true,
       },
     });
 
