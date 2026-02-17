@@ -1,4 +1,5 @@
-import { Controller, Post, Get, Param, Body, Sse } from '@nestjs/common';
+import { Controller, Post, Get, Param, Body, Sse, Res } from '@nestjs/common';
+import type { Response } from 'express';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { MessagesService, StreamEvent } from './messages.service';
@@ -35,11 +36,22 @@ export class MessagesController {
 
   @Public()
   @Sse('messages/:messageId/stream')
-  streamMessage(@Param('messageId') messageId: string): Observable<SseEvent> {
+  streamMessage(
+    @Param('messageId') messageId: string,
+    @Res({ passthrough: true }) res: Response,
+  ): Observable<SseEvent> {
+    res.setHeader('Content-Type', 'text/event-stream; charset=utf-8');
+    res.setHeader('Cache-Control', 'no-cache, no-transform');
+    res.setHeader('Connection', 'keep-alive');
+    res.setHeader('X-Accel-Buffering', 'no');
+
     return this.messagesService.streamMessage(messageId).pipe(
       map((event: StreamEvent) => ({
         event: event.event,
-        data: event.data,
+        // For token events, encode as base64 to preserve UTF-8
+        data: event.event === 'token'
+          ? JSON.stringify({ text: Buffer.from(event.data, 'utf8').toString('base64') })
+          : event.data,
       })),
     );
   }

@@ -8,12 +8,24 @@ export const chatApi = {
   },
 
   createSession: async (): Promise<ChatSession> => {
-    const response = await apiClient.post<ChatSession>('/chat/sessions');
+    const response = await apiClient.post<ChatSession>('/chat/sessions', {
+      mode: 'chat',
+    });
     return response.data;
   },
 
   sendMessage: async (data: SendMessageRequest): Promise<SendMessageResponse> => {
-    const response = await apiClient.post<SendMessageResponse>('/chat/message', data);
+    const formData = new FormData();
+    formData.append('message', data.message);
+    if (data.sessionId) {
+      formData.append('sessionId', data.sessionId);
+    }
+    if (data.image) {
+      formData.append('image', data.image);
+    }
+    const response = await apiClient.post<SendMessageResponse>('/chat/message', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
     return response.data;
   },
 

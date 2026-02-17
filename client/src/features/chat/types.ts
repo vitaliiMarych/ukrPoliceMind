@@ -2,6 +2,7 @@ export interface Message {
   id: string;
   role: 'user' | 'assistant';
   content: string;
+  imageUrl?: string | null;
   createdAt: string;
 }
 
@@ -16,9 +17,12 @@ export interface ChatSession {
 export interface SendMessageRequest {
   message: string;
   sessionId?: string;
+  image?: File;
 }
 
 export interface SendMessageResponse {
   sessionId: string;
-  messageId: string;
+  userMessageId: string;
+  assistantMessageId: string;
+  streamUrl: string;
 }

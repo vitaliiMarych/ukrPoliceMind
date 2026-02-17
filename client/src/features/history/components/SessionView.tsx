@@ -3,6 +3,8 @@ import { useParams, useNavigate } from 'react-router-dom';
 import ReactMarkdown from 'react-markdown';
 import { historyApi } from '../api/historyApi';
 
+const SERVER_URL = import.meta.env.VITE_API_BASE_URL?.replace('/api/v1', '') || 'http://localhost:3000';
+
 export const SessionView = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
@@ -46,42 +48,13 @@ export const SessionView = () => {
               {new Date(session.createdAt).toLocaleString('uk-UA')}
             </p>
             <span className="inline-block mt-2 px-3 py-1 text-xs font-medium rounded-full bg-blue-100 text-blue-800">
-              {session.type === 'chat' ? 'Чат' : 'Майстер'}
+              {session.mode === 'chat' ? 'Чат' : 'Майстер'}
             </span>
           </div>
         </div>
       </div>
 
-      {session.type === 'wizard' && session.wizardData && (
-        <div className="bg-white rounded-lg shadow-md p-6 mb-6">
-          <h2 className="text-xl font-semibold text-gray-900 mb-4">
-            {session.wizardData.templateName}
-          </h2>
-          <div className="space-y-4">
-            <div>
-              <h3 className="text-sm font-medium text-gray-700 mb-2">Відповіді:</h3>
-              <div className="space-y-2">
-                {Object.entries(session.wizardData.answers).map(([key, value]) => (
-                  <div key={key} className="border-l-4 border-blue-500 pl-4 py-2">
-                    <p className="text-sm font-medium text-gray-700">{key}:</p>
-                    <p className="text-gray-900">{value}</p>
-                  </div>
-                ))}
-              </div>
-            </div>
-            <div>
-              <h3 className="text-sm font-medium text-gray-700 mb-2">Рекомендація:</h3>
-              <div className="bg-gray-50 rounded-lg p-4">
-                <div className="prose prose-sm max-w-none">
-                  <ReactMarkdown>{session.wizardData.recommendation}</ReactMarkdown>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {session.type === 'chat' && (
+      {session.messages && session.messages.length > 0 && (
         <div className="space-y-4">
           {session.messages.map((message) => (
             <div
@@ -95,12 +68,19 @@ export const SessionView = () => {
                     : 'bg-white text-gray-900 shadow-md'
                 }`}
               >
+                {message.imageUrl && (
+                  <img
+                    src={`${SERVER_URL}${message.imageUrl}`}
+                    alt="Прикріплене зображення"
+                    className="max-w-full max-h-64 rounded-lg mb-2"
+                  />
+                )}
                 {message.role === 'assistant' ? (
                   <div className="prose prose-sm max-w-none">
                     <ReactMarkdown>{message.content}</ReactMarkdown>
                   </div>
                 ) : (
-                  <p className="whitespace-pre-wrap">{message.content}</p>
+                  message.content && <p className="whitespace-pre-wrap">{message.content}</p>
                 )}
               </div>
             </div>

@@ -79,6 +79,7 @@ model Message {
   sessionId String
   role      MessageRole
   content   String        @db.Text
+  imageUrl  String?
   status    MessageStatus @default(pending)
   createdAt DateTime      @default(now())
 

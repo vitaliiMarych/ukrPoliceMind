@@ -1,199 +1,195 @@
-import { PrismaClient, UserRole } from '@prisma/client';
+import { PrismaPg } from '@prisma/adapter-pg';
+import { PrismaClient } from '@prisma/client';
+import { Pool } from 'pg';
 import * as bcrypt from 'bcrypt';
 
-const prisma = new PrismaClient();
+const connectionString = process.env.DATABASE_URL || 'postgresql://postgres:postgres@localhost:5432/ukrpolicemind';
+const pool = new Pool({ connectionString });
+const adapter = new PrismaPg(pool);
+const prisma = new PrismaClient({ adapter });
 
 async function main() {
-  console.log('🌱 Starting seed...');
+  console.log('🌱 Seeding database...');
 
-  // Створення admin користувача
-  const adminPassword = await bcrypt.hash('admin123', 10);
+  // Delete existing categories to avoid duplicates
+  await prisma.wizardCategory.deleteMany({});
+  console.log('🗑️  Cleared existing categories');
 
-  const admin = await prisma.user.upsert({
-    where: { email: 'admin@ukrpolicemind.com' },
-    update: {},
-    create: {
-      email: 'admin@ukrpolicemind.com',
-      passwordHash: adminPassword,
-      role: UserRole.ADMIN,
-    },
-  });
-
-  console.log('✅ Admin user created:', admin.email);
-
-  // Створення тестового користувача
-  const userPassword = await bcrypt.hash('user123', 10);
-
-  const user = await prisma.user.upsert({
-    where: { email: 'user@ukrpolicemind.com' },
-    update: {},
-    create: {
-      email: 'user@ukrpolicemind.com',
-      passwordHash: userPassword,
-      role: UserRole.USER,
-    },
-  });
-
-  console.log('✅ Test user created:', user.email);
-
-  // Створення system prompt
-  await prisma.systemConfig.upsert({
-    where: { key: 'system_prompt' },
-    update: {},
-    create: {
-      key: 'system_prompt',
-      value: `Ти - експертний асистент з питань правоохоронної діяльності в Україні.
-
-Твоя роль:
-- Надавати точні, структуровані та професійні відповіді
-- Посилатися на чинне законодавство України
-- Пояснювати складні юридичні терміни простою мовою
-- Надавати практичні поради та рекомендації
-- Зберігати нейтральність та об'єктивність
-
-Завжди:
-- Перевіряй актуальність інформації
-- Якщо не впевнений - говори про це
-- Рекомендуй звернутися до професійного юриста у складних випадках`,
-    },
-  });
-
-  console.log('✅ System prompt created');
-
-  // Створення wizard категорій
   const categories = [
     {
-      title: 'Звернення до поліції',
-      description: 'Допомога у складанні заяви до правоохоронних органів',
-      icon: '🚔',
+      title: 'Трудові відносини',
+      description: 'Консультації щодо трудових договорів, звільнення, зарплати',
+      icon: '💼',
       schemaJson: JSON.stringify({
         fields: [
           {
-            id: 'incident_type',
+            id: 'employment_type',
             type: 'select',
-            label: 'Тип інциденту',
-            options: [
-              'Крадіжка',
-              'Шахрайство',
-              'Побиття',
-              'Погроза',
-              'Інше',
-            ],
+            label: 'Тип трудових відносин',
             required: true,
+            options: ['Офіційне працевлаштування', 'Цивільно-правовий договір', 'Неофіційна робота'],
+            step: 1,
+          },
+          {
+            id: 'issue_type',
+            type: 'select',
+            label: 'Тип проблеми',
+            required: true,
+            options: ['Звільнення', 'Затримка зарплати', 'Порушення умов договору', 'Дискримінація', 'Інше'],
+            step: 1,
+          },
+          {
+            id: 'employer_name',
+            type: 'text',
+            label: 'Назва роботодавця',
+            placeholder: 'Введіть назву організації',
+            required: false,
+            step: 2,
+          },
+          {
+            id: 'employment_duration',
+            type: 'text',
+            label: 'Стаж роботи',
+            placeholder: 'Наприклад: 2 роки 3 місяці',
+            required: false,
+            step: 2,
+          },
+          {
+            id: 'salary_amount',
+            type: 'number',
+            label: 'Розмір заробітної плати (грн)',
+            placeholder: 'Сума в гривнях',
+            required: false,
+            step: 2,
           },
           {
             id: 'incident_date',
             type: 'date',
             label: 'Дата інциденту',
-            required: true,
-          },
-          {
-            id: 'incident_location',
-            type: 'text',
-            label: 'Місце події',
-            required: true,
-          },
-          {
-            id: 'incident_description',
-            type: 'textarea',
-            label: 'Опис події',
-            required: true,
-          },
-          {
-            id: 'witnesses',
-            type: 'textarea',
-            label: 'Свідки (якщо є)',
             required: false,
+            step: 2,
+          },
+          {
+            id: 'issue_description',
+            type: 'textarea',
+            label: 'Опишіть вашу ситуацію',
+            placeholder: 'Детально опишіть проблему, вкажіть всі важливі обставини...',
+            required: true,
+            step: 3,
           },
         ],
       }),
       isActive: true,
     },
     {
-      title: 'Права при затриманні',
-      description: 'Консультація щодо ваших прав при спілкуванні з поліцією',
-      icon: '⚖️',
+      title: 'Житлові питання',
+      description: 'Питання оренди, купівлі-продажу нерухомості',
+      icon: '🏠',
       schemaJson: JSON.stringify({
         fields: [
           {
-            id: 'detention_type',
+            id: 'housing_type',
             type: 'select',
-            label: 'Тип затримання',
-            options: [
-              'Зупинка на вулиці',
-              'Затримання в автомобілі',
-              'Затримання вдома',
-              'Затримання на роботі',
-              'Інше',
-            ],
+            label: 'Тип житла',
             required: true,
+            options: ['Квартира', 'Будинок', 'Кімната в гуртожитку'],
+            step: 1,
           },
           {
-            id: 'reason_known',
-            type: 'radio',
-            label: 'Чи повідомили причину затримання?',
-            options: ['Так', 'Ні'],
+            id: 'ownership_type',
+            type: 'select',
+            label: 'Тип власності',
             required: true,
+            options: ['Власність', 'Оренда', 'Соціальне житло', 'Спадщина'],
+            step: 1,
           },
           {
-            id: 'documents_requested',
-            type: 'checkbox',
-            label: 'Які документи вимагали?',
-            options: [
-              'Паспорт',
-              'Довідка про місце проживання',
-              'Водійське посвідчення',
-              'Інше',
-            ],
+            id: 'location',
+            type: 'text',
+            label: 'Місцезнаходження',
+            placeholder: 'Місто, район',
             required: false,
+            step: 2,
           },
           {
-            id: 'situation_description',
+            id: 'area_size',
+            type: 'number',
+            label: 'Площа (м²)',
+            placeholder: 'Площа в квадратних метрах',
+            required: false,
+            step: 2,
+          },
+          {
+            id: 'contract_date',
+            type: 'date',
+            label: 'Дата договору / початку проблеми',
+            required: false,
+            step: 2,
+          },
+          {
+            id: 'problem_description',
+            type: 'textarea',
+            label: 'Опис проблеми',
+            placeholder: 'Детально опишіть ситуацію, вкажіть всі важливі обставини...',
+            required: true,
+            step: 3,
+          },
+        ],
+      }),
+      isActive: true,
+    },
+    {
+      title: 'Сімейне право',
+      description: 'Питання шлюбу, розлучення, аліментів',
+      icon: '👨‍👩‍👧',
+      schemaJson: JSON.stringify({
+        fields: [
+          {
+            id: 'family_issue',
+            type: 'select',
+            label: 'Тип питання',
+            required: true,
+            options: ['Розлучення', 'Аліменти', 'Опіка', 'Інше'],
+            step: 1,
+          },
+          {
+            id: 'spouse_agreement',
+            type: 'select',
+            label: 'Позиція сторін',
+            required: true,
+            options: ['Обопільна згода', 'Одностороннє рішення', 'Спірна ситуація'],
+            step: 1,
+          },
+          {
+            id: 'marriage_date',
+            type: 'date',
+            label: 'Дата укладення шлюбу',
+            required: false,
+            step: 2,
+          },
+          {
+            id: 'children_count',
+            type: 'number',
+            label: 'Кількість спільних дітей',
+            placeholder: '0',
+            required: false,
+            step: 2,
+          },
+          {
+            id: 'children_ages',
+            type: 'text',
+            label: 'Вік дітей',
+            placeholder: 'Наприклад: 5, 12',
+            required: false,
+            step: 2,
+          },
+          {
+            id: 'situation',
             type: 'textarea',
             label: 'Опишіть ситуацію',
+            placeholder: 'Детально опишіть обставини, вкажіть всі важливі деталі...',
             required: true,
-          },
-        ],
-      }),
-      isActive: true,
-    },
-    {
-      title: 'Адміністративні правопорушення',
-      description: 'Консультація з питань адміністративної відповідальності',
-      icon: '📋',
-      schemaJson: JSON.stringify({
-        fields: [
-          {
-            id: 'violation_type',
-            type: 'select',
-            label: 'Тип правопорушення',
-            options: [
-              'ПДР (порушення правил дорожнього руху)',
-              'Дрібне хуліганство',
-              'Порушення тиші',
-              'Розпивання алкоголю в громадських місцях',
-              'Інше',
-            ],
-            required: true,
-          },
-          {
-            id: 'protocol_issued',
-            type: 'radio',
-            label: 'Чи складено протокол?',
-            options: ['Так', 'Ні'],
-            required: true,
-          },
-          {
-            id: 'penalty_amount',
-            type: 'text',
-            label: 'Сума штрафу (якщо відома)',
-            required: false,
-          },
-          {
-            id: 'question',
-            type: 'textarea',
-            label: 'Ваше питання',
-            required: true,
+            step: 3,
           },
         ],
       }),
@@ -202,25 +198,19 @@ async function main() {
   ];
 
   for (const category of categories) {
-    await prisma.wizardCategory.upsert({
-      where: { id: category.title }, // Використовуємо title як унікальний ідентифікатор
-      update: {},
-      create: category,
-    });
-    console.log(`✅ Wizard category created: ${category.title}`);
+    const created = await prisma.wizardCategory.create({ data: category });
+    console.log('✅ Created category:', created.title);
   }
 
-  console.log('🎉 Seed completed successfully!');
-  console.log('\n📝 Test credentials:');
-  console.log('Admin: admin@ukrpolicemind.com / admin123');
-  console.log('User: user@ukrpolicemind.com / user123');
+  console.log('🎉 Seeding completed!');
 }
 
 main()
   .catch((e) => {
-    console.error('❌ Seed failed:', e);
+    console.error('❌ Seeding failed:', e);
     process.exit(1);
   })
   .finally(async () => {
     await prisma.$disconnect();
+    await pool.end();
   });

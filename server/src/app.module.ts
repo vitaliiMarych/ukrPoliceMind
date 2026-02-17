@@ -10,6 +10,8 @@ import { MessagesModule } from './messages/messages.module';
 import { LlmModule } from './llm/llm.module';
 import { WizardModule } from './wizard/wizard.module';
 import { AdminModule } from './admin/admin.module';
+import { ChatModule } from './chat/chat.module';
+import { HistoryModule } from './history/history.module';
 import { JwtAuthGuard } from './common/guards/jwt-auth.guard';
 import { RolesGuard } from './common/guards/roles.guard';
 
@@ -23,6 +25,8 @@ import { RolesGuard } from './common/guards/roles.guard';
     LlmModule,
     WizardModule,
     AdminModule,
+    ChatModule,
+    HistoryModule,
   ],
   controllers: [AppController],
   providers: [

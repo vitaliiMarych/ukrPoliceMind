@@ -21,29 +21,44 @@ export class MessagesService {
   ) {}
 
   async createMessage(
-    sessionId: string,
+    sessionId: string | undefined,
     userId: string,
     dto: CreateMessageDto,
+    imageUrl?: string,
   ): Promise<CreateMessageResponseDto> {
-    // Verify session belongs to user
-    const session = await this.prisma.consultationSession.findUnique({
-      where: { id: sessionId },
-    });
+    let session;
 
-    if (!session) {
-      throw new NotFoundException('Session not found');
-    }
+    if (sessionId) {
+      // Verify existing session belongs to user
+      session = await this.prisma.consultationSession.findUnique({
+        where: { id: sessionId },
+      });
 
-    if (session.userId !== userId) {
-      throw new ForbiddenException('Access denied');
+      if (!session) {
+        throw new NotFoundException('Session not found');
+      }
+
+      if (session.userId !== userId) {
+        throw new ForbiddenException('Access denied');
+      }
+    } else {
+      // Create new session if none provided
+      session = await this.prisma.consultationSession.create({
+        data: {
+          userId,
+          mode: 'chat' as any,
+          title: 'Нова консультація',
+        },
+      });
     }
 
     // Create user message
     const userMessage = await this.prisma.message.create({
       data: {
-        sessionId,
+        sessionId: session.id,
         role: MessageRole.user,
         content: dto.content,
+        imageUrl: imageUrl || null,
         status: MessageStatus.done,
       },
     });
@@ -51,7 +66,7 @@ export class MessagesService {
     // Create assistant placeholder
     const assistantMessage = await this.prisma.message.create({
       data: {
-        sessionId,
+        sessionId: session.id,
         role: MessageRole.assistant,
         content: '',
         status: MessageStatus.pending,
@@ -62,6 +77,7 @@ export class MessagesService {
       userMessageId: userMessage.id,
       assistantMessageId: assistantMessage.id,
       streamUrl: `/api/v1/messages/${assistantMessage.id}/stream`,
+      sessionId: session.id,
     };
   }
 
@@ -113,16 +129,8 @@ export class MessagesService {
         .map((msg) => ({
           role: msg.role === MessageRole.user ? 'user' : 'assistant',
           content: msg.content,
+          imageUrl: msg.imageUrl || undefined,
         }));
-
-      // Get the last user message
-      const lastUserMessage =
-        conversationHistory[conversationHistory.length - 1]?.content || '';
-
-      conversationHistory.push({
-        role: 'user',
-        content: lastUserMessage,
-      });
 
       // Stream LLM response
       let fullResponse = '';
@@ -132,9 +140,10 @@ export class MessagesService {
         conversationHistory as any,
       )) {
         fullResponse += token;
+        // Ensure proper UTF-8 encoding by converting to string explicitly
         subscriber.next({
           event: 'token',
-          data: token,
+          data: String(token),
         });
       }
 

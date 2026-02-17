@@ -1,11 +1,14 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { GoogleGenerativeAI } from '@google/generative-ai';
+import { readFileSync } from 'fs';
+import { join, extname } from 'path';
 import { ConfigService } from '../config/config.service';
 import { PrismaService } from '../database/prisma.service';
 
 interface Message {
   role: 'user' | 'assistant';
   content: string;
+  imageUrl?: string;
 }
 
 @Injectable()
@@ -22,8 +25,10 @@ export class LlmService {
 
     if (apiKey && apiKey !== 'your-gemini-api-key-here') {
       this.genAI = new GoogleGenerativeAI(apiKey);
-      this.model = this.genAI.getGenerativeModel({ model: 'gemini-2.0-flash-exp' });
-      this.logger.log('Gemini AI initialized successfully');
+      this.model = this.genAI.getGenerativeModel({
+        model: 'gemini-2.5-flash',
+      });
+      this.logger.log('Gemini AI initialized successfully with model: gemini-2.5-flash');
     } else {
       this.logger.warn('Gemini API key not configured. LLM features will be limited.');
     }
@@ -73,8 +78,40 @@ export class LlmService {
         ],
       });
 
+      // Build message parts (text + optional image)
+      const messageParts: any[] = [];
+      if (lastMessage.content) {
+        messageParts.push(lastMessage.content);
+      } else if (lastMessage.imageUrl) {
+        messageParts.push('Проаналізуй це зображення та надай відповідь.');
+      }
+      if (lastMessage.imageUrl) {
+        try {
+          const imagePath = join(__dirname, '..', '..', lastMessage.imageUrl);
+          const imageData = readFileSync(imagePath);
+          const ext = extname(lastMessage.imageUrl).toLowerCase();
+          const mimeMap: Record<string, string> = {
+            '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg',
+            '.png': 'image/png', '.gif': 'image/gif',
+            '.webp': 'image/webp',
+          };
+          const mimeType = mimeMap[ext] || 'image/jpeg';
+          messageParts.push({
+            inlineData: {
+              mimeType,
+              data: imageData.toString('base64'),
+            },
+          });
+        } catch (err) {
+          this.logger.warn('Failed to read image for LLM:', err.message);
+        }
+      }
+      if (messageParts.length === 0) {
+        messageParts.push('');
+      }
+
       // Stream response
-      const result = await chat.sendMessageStream(lastMessage.content);
+      const result = await chat.sendMessageStream(messageParts);
 
       for await (const chunk of result.stream) {
         const text = chunk.text();
@@ -83,13 +120,13 @@ export class LlmService {
 
       // Log successful completion
       const latency = Date.now() - startTime;
-      await this.logLlmRequest(sessionId, 'gemini-2.0-flash-exp', 'success', latency);
+      await this.logLlmRequest(sessionId, 'gemini-2.5-flash', 'success', latency);
     } catch (error) {
       this.logger.error('LLM stream error:', error);
       const latency = Date.now() - startTime;
       await this.logLlmRequest(
         sessionId,
-        'gemini-2.0-flash-exp',
+        'gemini-2.5-flash',
         'error',
         latency,
         error.message,

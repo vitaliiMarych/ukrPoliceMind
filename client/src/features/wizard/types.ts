@@ -3,6 +3,9 @@ export interface WizardCategory {
   name: string;
   description: string;
   icon?: string;
+  schema?: {
+    fields: WizardFormField[];
+  };
 }
 
 export interface WizardFormField {
@@ -12,6 +15,7 @@ export interface WizardFormField {
   placeholder?: string;
   required: boolean;
   options?: string[];
+  step?: number;
 }
 
 export interface WizardTemplate {
@@ -23,13 +27,12 @@ export interface WizardTemplate {
 }
 
 export interface WizardSubmission {
-  templateId: string;
+  categoryId: string;
   answers: Record<string, string>;
 }
 
 export interface WizardResult {
-  id: string;
   sessionId: string;
-  recommendation: string;
-  createdAt: string;
+  assistantMessageId: string;
+  streamUrl: string;
 }

@@ -5,6 +5,7 @@ export class MessageResponseDto {
   sessionId: string;
   role: MessageRole;
   content: string;
+  imageUrl?: string | null;
   status: MessageStatus;
   createdAt: Date;
 }
@@ -13,4 +14,5 @@ export class CreateMessageResponseDto {
   userMessageId: string;
   assistantMessageId: string;
   streamUrl: string;
+  sessionId: string;
 }

@@ -9,12 +9,32 @@ export class WizardController {
 
   @Get('categories')
   async getCategories() {
-    return this.wizardService.getCategories();
+    console.log('[WizardController] Getting categories');
+    const categories = await this.wizardService.getCategories();
+    console.log('[WizardController] Found categories:', categories.length);
+
+    // Transform to frontend format
+    return categories.map((cat) => ({
+      id: cat.id,
+      name: cat.title,
+      description: cat.description,
+      icon: cat.icon,
+      schema: cat.schemaJson ? JSON.parse(cat.schemaJson) : null,
+    }));
   }
 
   @Get('categories/:id')
   async getCategory(@Param('id') id: string) {
-    return this.wizardService.getCategory(id);
+    console.log('[WizardController] Getting category:', id);
+    const category = await this.wizardService.getCategory(id);
+
+    return {
+      id: category.id,
+      name: category.title,
+      description: category.description,
+      icon: category.icon,
+      schema: category.schemaJson ? JSON.parse(category.schemaJson) : null,
+    };
   }
 
   @Post('submit')
@@ -22,6 +42,10 @@ export class WizardController {
     @CurrentUser() user: CurrentUserPayload,
     @Body() dto: SubmitWizardDto,
   ): Promise<WizardResponseDto> {
+    console.log('[WizardController] Submitting wizard:', {
+      userId: user.userId,
+      categoryId: dto.categoryId,
+    });
     return this.wizardService.submitWizard(user.userId, dto);
   }
 }
