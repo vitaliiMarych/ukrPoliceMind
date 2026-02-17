@@ -20,11 +20,9 @@ export const LoginForm = () => {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 via-blue-900 to-slate-800 py-12 px-4 sm:px-6 lg:px-8">
-      {/* Background pattern */}
       <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxnIGZpbGw9IiMyMzYzYjgiIGZpbGwtb3BhY2l0eT0iMC4xIj48cGF0aCBkPSJNMzYgMzRjMC0yLTIuNzYtNC03LTRzLTcgMi03IDR2MmgxNHYtMnptLTcgNGMtMi43NiAwLTUgMS03IDN2MWgxNHYtMWMtMi0yLTQuMjQtMy03LTN6bTAgOWMtMy4zMSAwLTYgMS02IDN2MWgxMnYtMWMwLTItMi42OS0zLTYtM3ptMCA5Yy0zLjMxIDAtNiAxLTYgM3YxaDEydi0xYzAtMi0yLjY5LTMtNi0zeiIvPjwvZz48L2c+PC9zdmc+')] opacity-5"></div>
 
       <div className="max-w-md w-full space-y-8 relative z-10">
-        {/* Header */}
         <div className="text-center">
           <div className="flex justify-center mb-6">
             <div className="relative">
@@ -49,10 +47,8 @@ export const LoginForm = () => {
           </p>
         </div>
 
-        {/* Form Card */}
         <div className="bg-white/10 backdrop-blur-lg rounded-2xl shadow-2xl border border-white/20 p-8">
           <form className="space-y-6" onSubmit={handleSubmit(onSubmit)}>
-            {/* Email Field */}
             <div>
               <label htmlFor="email" className="block text-sm font-semibold text-blue-100 mb-2">
                 Email адреса
@@ -80,7 +76,6 @@ export const LoginForm = () => {
               )}
             </div>
 
-            {/* Password Field */}
             <div>
               <label htmlFor="password" className="block text-sm font-semibold text-blue-100 mb-2">
                 Пароль
@@ -111,7 +106,6 @@ export const LoginForm = () => {
               )}
             </div>
 
-            {/* Error Alert */}
             {loginError && (
               <div className="rounded-xl bg-red-500/20 border border-red-500/50 p-4">
                 <div className="flex items-center space-x-3">
@@ -129,7 +123,6 @@ export const LoginForm = () => {
               </div>
             )}
 
-            {/* Submit Button */}
             <button
               type="submit"
               disabled={isLoggingIn}
@@ -168,7 +161,6 @@ export const LoginForm = () => {
               )}
             </button>
 
-            {/* Register Link */}
             <div className="text-center pt-4">
               <Link
                 to="/register"
@@ -181,7 +173,6 @@ export const LoginForm = () => {
           </form>
         </div>
 
-        {/* Footer */}
         <p className="text-center text-slate-400 text-xs">
           Захищений доступ до правової консультаційної системи
         </p>

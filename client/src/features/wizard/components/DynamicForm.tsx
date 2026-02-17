@@ -116,7 +116,6 @@ export const DynamicForm = ({ category, onSubmit, onBack, isSubmitting }: Dynami
         <p className="text-slate-600">{category.description}</p>
       </div>
 
-      {/* Progress bar */}
       {totalSteps > 1 && (
         <div className="flex items-center mb-8">
           {stepNumbers.map((step, index) => (

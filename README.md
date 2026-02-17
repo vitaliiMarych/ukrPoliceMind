@@ -1,312 +1,133 @@
-# ukrPoliceMind 🇺🇦
+# ukrPoliceMind
 
-Веб-інформаційна система інтелектуальної консультації з питань правоохоронної діяльності в Україні.
+Веб-система правових консультацій з AI. Користувач задає питання — штучний інтелект (Google Gemini) відповідає в реальному часі.
 
-## 📋 Опис проекту
+Два режими:
+- **Чат** — вільний діалог з AI
+- **Майстер** — покрокова анкета по конкретній ситуації (трудове право, житлові питання, сімейне право)
 
-ukrPoliceMind - це повнофункціональна веб-платформа для надання консультацій з правових питань, що використовує штучний інтелект (Google Gemini) для генерації відповідей. Система підтримує два режими роботи:
+Є адмін-панель: статистика, управління користувачами, логи AI-запитів.
 
-- **Chat Mode** - вільний діалог з AI асистентом
-- **Wizard Mode** - структуровані сценарії опитування для типових ситуацій
+## Стек
 
-## 🏗 Технології
+| Backend | Frontend |
+|---------|----------|
+| Node.js + NestJS | React 19 + TypeScript |
+| PostgreSQL + Prisma ORM | Vite |
+| JWT авторизація | Tailwind CSS |
+| Google Gemini AI | React Query + Axios |
+| SSE стрімінг | React Hook Form + Zod |
 
-### Backend
-- **NestJS** - Node.js фреймворк
-- **PostgreSQL** - Реляційна база даних
-- **Prisma ORM** - Type-safe ORM
-- **JWT** - Аутентифікація
-- **Google Gemini AI** - LLM для генерації відповідей
-- **SSE (Server-Sent Events)** - Потоковий стрімінг відповідей
+## Що потрібно встановити
 
-### Frontend
-- **React 19** - UI бібліотека
-- **TypeScript** - Type safety
-- **Vite** - Build tool
-- **React Router v6** - Маршрутизація
-- **Tanstack Query** - API state management
-- **React Hook Form + Zod** - Валідація форм
-- **Tailwind CSS v4** - Стилізація
-- **Axios** - HTTP клієнт
+1. **Node.js** (версія 18 або новіша) — [nodejs.org](https://nodejs.org/)
+2. **Docker Desktop** — [docker.com/products/docker-desktop](https://www.docker.com/products/docker-desktop/) (для бази даних PostgreSQL)
+3. **Git** — [git-scm.com](https://git-scm.com/)
+4. **Google Gemini API ключ** — отримати безкоштовно на [aistudio.google.com/apikey](https://aistudio.google.com/apikey)
 
-## 🚀 Швидкий старт
+## Встановлення та запуск
 
-### Передумови
-
-Перед запуском переконайтеся, що встановлено:
-- Node.js 18+
-- npm або yarn
-- PostgreSQL 15+
-- Git
-
-### 1. Клонування репозиторію
+### 1. Скачати проект
 
 ```bash
 git clone https://github.com/vitaliiMarych/ukrPoliceMind.git
 cd ukrPoliceMind
 ```
 
-### 2. Налаштування Backend
+### 2. Запустити базу даних
 
 ```bash
 cd server
-
-# Встановлення залежностей
-npm install
-
-# Створення .env файлу
-cp .env.example .env
-
-# Редагування .env (додайте свої дані)
-# - DATABASE_URL для PostgreSQL
-# - JWT_SECRET для аутентифікації
-# - GEMINI_API_KEY для AI (отримати на https://makersuite.google.com/app/apikey)
-
-# Запуск PostgreSQL через Docker (опціонально)
 docker-compose up -d
-
-# Застосування міграцій
-npx prisma migrate dev
-
-# Seed бази даних тестовими даними
-npm run prisma:seed
-
-# Запуск backend
-npm run start:dev
 ```
 
-Backend буде доступний на `http://localhost:3000`
+Це запустить PostgreSQL в Docker-контейнері.
 
-**Тестові облікові дані:**
-- Admin: `admin@ukrpolicemind.com` / `admin123`
-- User: `user@ukrpolicemind.com` / `user123`
-
-### 3. Налаштування Frontend
+### 3. Налаштувати backend
 
 ```bash
-cd ../client
-
-# Встановлення залежностей
 npm install
-
-# Створення .env файлу
 cp .env.example .env
-
-# Запуск frontend
-npm run dev
 ```
 
-Frontend буде доступний на `http://localhost:5173`
-
-## 📁 Структура проекту
+Відкрити файл `server/.env` і вставити свій Gemini API ключ:
 
 ```
-ukrPoliceMind/
-├── server/               # Backend (NestJS)
-│   ├── prisma/          # Prisma схема та міграції
-│   ├── src/
-│   │   ├── auth/        # Аутентифікація
-│   │   ├── sessions/    # Консультаційні сесії
-│   │   ├── messages/    # Повідомлення
-│   │   ├── llm/         # LLM інтеграція
-│   │   ├── wizard/      # Wizard сценарії
-│   │   ├── admin/       # Адмін панель
-│   │   ├── config/      # Конфігурація
-│   │   └── database/    # Prisma сервіс
-│   ├── API_DOCS.md      # API документація
-│   └── README_RUN.md    # Інструкції по запуску
-│
-└── client/              # Frontend (React)
-    ├── src/
-    │   ├── features/    # Feature-модулі
-    │   │   ├── auth/    # Аутентифікація
-    │   │   ├── chat/    # Чат
-    │   │   ├── wizard/  # Wizard
-    │   │   ├── history/ # Історія
-    │   │   └── admin/   # Адмін панель
-    │   └── shared/      # Спільні компоненти
-    └── README.md        # Frontend документація
+GEMINI_API_KEY="ваш-ключ-сюди"
 ```
 
-## 🎯 Основні функції
+Решту залишити як є.
 
-### Для користувачів
-- ✅ Реєстрація та авторизація
-- ✅ Чат-консультація з AI асистентом
-- ✅ Структуровані wizard-сценарії
-- ✅ Історія консультацій
-- ✅ Потоковий стрімінг відповідей (real-time)
-
-### Для адміністраторів
-- ✅ Dashboard зі статистикою
-- ✅ Управління користувачами (блокування/розблокування)
-- ✅ Перегляд всіх консультацій
-- ✅ Управління wizard категоріями
-- ✅ Системні налаштування
-- ✅ Логи LLM запитів
-
-## 🔐 API Endpoints
-
-### Authentication
-- `POST /api/v1/auth/register` - Реєстрація
-- `POST /api/v1/auth/login` - Логін
-- `POST /api/v1/auth/refresh` - Оновлення токена
-- `POST /api/v1/auth/logout` - Вихід
-
-### Sessions
-- `POST /api/v1/sessions` - Створити сесію
-- `GET /api/v1/sessions` - Список сесій
-- `GET /api/v1/sessions/:id` - Деталі сесії
-
-### Messages
-- `POST /api/v1/sessions/:sessionId/messages` - Створити повідомлення
-- `GET /api/v1/messages/:messageId/stream` (SSE) - Стрім відповіді
-
-### Wizard
-- `GET /api/v1/wizard/categories` - Категорії
-- `POST /api/v1/wizard/submit` - Надіслати форму
-
-### Admin (потрібна роль ADMIN)
-- `GET /api/v1/admin/users` - Користувачі
-- `GET /api/v1/admin/sessions` - Всі сесії
-- `GET /api/v1/admin/stats` - Статистика
-
-Повна документація API: [server/API_DOCS.md](server/API_DOCS.md)
-
-## 🛠 Розробка
-
-### Backend
+### 4. Створити таблиці та тестові дані
 
 ```bash
-cd server
-
-# Development mode з hot reload
-npm run start:dev
-
-# Production build
-npm run build
-npm run start:prod
-
-# Prisma Studio (GUI для БД)
-npm run prisma:studio
-
-# Тести
-npm run test
+npx prisma migrate dev
+npm run prisma:seed
 ```
 
-### Frontend
+### 5. Запустити backend
+
+```bash
+npm run start:dev
+```
+
+Сервер запуститься на `http://localhost:3000`
+
+### 6. Запустити frontend (в новому терміналі)
 
 ```bash
 cd client
-
-# Development mode
+npm install
+cp .env.example .env
 npm run dev
-
-# Production build
-npm run build
-
-# Preview production build
-npm run preview
-
-# Linting
-npm run lint
 ```
 
-## 📦 Розгортання
+Сайт відкриється на `http://localhost:5173`
 
-### Docker (Recommended)
+## Тестові акаунти
 
-Створіть `docker-compose.yml` для всього стеку:
+| Роль | Email | Пароль |
+|------|-------|--------|
+| Адмін | admin@ukrpolicemind.com | admin123 |
+| Користувач | user@ukrpolicemind.com | user123 |
 
-```yaml
-version: '3.8'
+## Структура проекту
 
-services:
-  postgres:
-    image: postgres:15-alpine
-    environment:
-      POSTGRES_DB: ukrpolicemind
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-    ports:
-      - "5432:5432"
-
-  backend:
-    build: ./server
-    environment:
-      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/ukrpolicemind
-      JWT_SECRET: your-secret-key
-      GEMINI_API_KEY: your-api-key
-    ports:
-      - "3000:3000"
-    depends_on:
-      - postgres
-
-  frontend:
-    build: ./client
-    environment:
-      VITE_API_URL: http://localhost:3000/api/v1
-    ports:
-      - "80:80"
-    depends_on:
-      - backend
-
-volumes:
-  postgres_data:
+```
+ukrPoliceMind/
+├── server/                # Backend (NestJS)
+│   ├── prisma/            # Схема БД, міграції, seed
+│   └── src/
+│       ├── auth/          # Реєстрація, логін, JWT
+│       ├── chat/          # Чат-режим
+│       ├── wizard/        # Майстер-режим
+│       ├── messages/      # Повідомлення + SSE стрімінг
+│       ├── llm/           # Інтеграція з Google Gemini
+│       ├── admin/         # Адмін-панель
+│       ├── history/       # Історія сесій
+│       └── common/        # Guards, decorators
+│
+└── client/                # Frontend (React)
+    └── src/
+        ├── features/      # Модулі (auth, chat, wizard, history, admin)
+        └── shared/        # Спільні компоненти, хуки, типи
 ```
 
-## 🔧 Налаштування
+## Корисні команди
 
-### Backend (.env)
+### Backend (з папки `server/`)
 
-```env
-DATABASE_URL="postgresql://user:password@localhost:5432/ukrpolicemind"
-JWT_SECRET="your-secure-secret-key"
-JWT_ACCESS_EXPIRATION="15m"
-JWT_REFRESH_EXPIRATION="7d"
-GEMINI_API_KEY="your-gemini-api-key"
-PORT=3000
-NODE_ENV="development"
+```bash
+npm run start:dev          # Запуск з hot-reload
+npm run build              # Production збірка
+npm run prisma:studio      # GUI для перегляду БД (localhost:5555)
+npm run prisma:seed        # Заповнити БД тестовими даними
 ```
 
-### Frontend (.env)
+### Frontend (з папки `client/`)
 
-```env
-VITE_API_URL="http://localhost:3000/api/v1"
+```bash
+npm run dev                # Запуск dev сервера
+npm run build              # Production збірка
 ```
 
-## 📚 Документація
-
-- [Backend Documentation](server/README_RUN.md)
-- [API Documentation](server/API_DOCS.md)
-- [Frontend Documentation](client/README.md)
-- [Technical Plan](docs/main.md)
-
-## 🤝 Внесок
-
-1. Fork репозиторій
-2. Створіть feature branch (`git checkout -b feature/AmazingFeature`)
-3. Commit зміни (`git commit -m 'Add some AmazingFeature'`)
-4. Push в branch (`git push origin feature/AmazingFeature`)
-5. Відкрийте Pull Request
-
-## 📝 Ліцензія
-
-Цей проект є бакалаврською роботою та призначений для освітніх цілей.
-
-## 👨‍💻 Автор
-
-**Марич Віталій**
-- GitHub: [@vitaliiMarych](https://github.com/vitaliiMarych)
-
-## 🙏 Подяки
-
-- Google Gemini AI за LLM можливості
-- NestJS та React команди за чудові фреймворки
-- Всім контриб'юторам Open Source бібліотек
-
----
-
-**Зроблено з ❤️ для покращення доступності правової інформації в Україні 🇺🇦**

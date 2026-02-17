@@ -14,7 +14,6 @@ export const Navbar = () => {
     <nav className="fixed top-0 left-0 right-0 z-50 bg-gradient-to-r from-slate-800 via-slate-900 to-blue-900 text-white shadow-2xl border-b-4 border-blue-500">
       <div className="max-w-7xl mx-auto px-6">
         <div className="flex justify-between items-center h-20">
-          {/* Logo and Brand */}
           <div className="flex items-center space-x-10">
             <Link to="/" className="flex items-center space-x-3 group">
               <div className="relative">
@@ -37,7 +36,6 @@ export const Navbar = () => {
               </div>
             </Link>
 
-            {/* Navigation Links */}
             {user && (
               <div className="flex items-center space-x-2">
                 <Link
@@ -122,7 +120,6 @@ export const Navbar = () => {
             )}
           </div>
 
-          {/* User Section */}
           <div className="flex items-center space-x-4">
             {user ? (
               <>
@@ -171,7 +168,6 @@ export const Navbar = () => {
         </div>
       </div>
 
-      {/* Bottom accent line */}
       <div className="h-1 bg-gradient-to-r from-transparent via-blue-500 to-transparent opacity-50"></div>
     </nav>
   );

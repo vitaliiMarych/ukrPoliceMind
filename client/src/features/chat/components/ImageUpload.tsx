@@ -17,7 +17,6 @@ export const ImageUpload = ({ onImageSelect, disabled }: ImageUploadProps) => {
     if (file && file.type.startsWith('image/')) {
       onImageSelect(file);
     }
-    // Reset input
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
     }

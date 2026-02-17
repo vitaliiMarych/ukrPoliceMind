@@ -40,7 +40,6 @@ export const useChatStream = ({ onMessage, onComplete, onError }: UseChatStreamO
             onComplete(messageId);
           }
         } catch {
-          // Skip malformed events
         }
       };
 
