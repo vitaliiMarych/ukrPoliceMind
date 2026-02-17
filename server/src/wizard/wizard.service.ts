@@ -44,7 +44,6 @@ export class WizardService {
       throw new NotFoundException('Category not found');
     }
 
-    // Create wizard session
     const session = await this.prisma.consultationSession.create({
       data: {
         userId,
@@ -54,14 +53,12 @@ export class WizardService {
       },
     });
 
-    // Format wizard answers as user message
     const formattedAnswers = Object.entries(dto.answers)
       .map(([key, value]) => `${key}: ${value}`)
       .join('\n');
 
     const userContent = `Категорія: ${category.title}\n\nВідповіді:\n${formattedAnswers}`;
 
-    // Create user message
     await this.prisma.message.create({
       data: {
         sessionId: session.id,
@@ -71,7 +68,6 @@ export class WizardService {
       },
     });
 
-    // Create assistant placeholder
     const assistantMessage = await this.prisma.message.create({
       data: {
         sessionId: session.id,
@@ -88,7 +84,6 @@ export class WizardService {
     };
   }
 
-  // Admin methods
   async createCategory(dto: CreateWizardCategoryDto) {
     return this.prisma.wizardCategory.create({
       data: {

@@ -50,8 +50,7 @@ export const WizardPage = () => {
   );
 
   const onError = useCallback(
-    (error: string) => {
-      console.error('[WizardPage] Stream error:', error);
+    () => {
       setStreamingContent('');
       queryClient.invalidateQueries({ queryKey: ['sessions'] });
     },

@@ -20,7 +20,6 @@ import { CreateWizardCategoryDto, UpdateWizardCategoryDto } from '../wizard/dto/
 export class AdminController {
   constructor(private adminService: AdminService) {}
 
-  // Users
   @Get('users')
   async getUsers() {
     return this.adminService.getUsers();
@@ -36,7 +35,6 @@ export class AdminController {
     return this.adminService.unblockUser(id);
   }
 
-  // Sessions
   @Get('sessions')
   async getAllSessions() {
     return this.adminService.getAllSessions();
@@ -53,7 +51,6 @@ export class AdminController {
     return this.adminService.deleteSession(id);
   }
 
-  // Wizard categories
   @Get('wizard/categories')
   async getAllWizardCategories() {
     return this.adminService.getAllWizardCategories();
@@ -75,7 +72,6 @@ export class AdminController {
     return this.adminService.deleteWizardCategory(id);
   }
 
-  // System config
   @Get('system-config')
   async getSystemConfig() {
     return this.adminService.getSystemConfig();
@@ -86,13 +82,11 @@ export class AdminController {
     return this.adminService.updateSystemConfig(key, value);
   }
 
-  // Stats
   @Get('stats')
   async getStats() {
     return this.adminService.getStats();
   }
 
-  // Logs
   @Get('llm-logs')
   async getLlmLogs(@Query('limit') limit?: string) {
     return this.adminService.getLlmLogs(limit ? parseInt(limit) : 100);

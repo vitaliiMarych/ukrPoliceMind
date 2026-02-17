@@ -1,10 +1,10 @@
 import { Injectable, NotFoundException, ForbiddenException, Logger } from '@nestjs/common';
-import { Observable } from 'rxjs';
+import { Observable, type Subscriber } from 'rxjs';
 import { PrismaService } from '../database/prisma.service';
 import { LlmService } from '../llm/llm.service';
 import { CreateMessageDto } from './dto/create-message.dto';
 import { CreateMessageResponseDto, MessageResponseDto } from './dto/message-response.dto';
-import { MessageRole, MessageStatus } from '@prisma/client';
+import { MessageRole, MessageStatus, SessionMode } from '@prisma/client';
 
 export interface StreamEvent {
   event: 'meta' | 'token' | 'done' | 'error';
@@ -29,7 +29,6 @@ export class MessagesService {
     let session;
 
     if (sessionId) {
-      // Verify existing session belongs to user
       session = await this.prisma.consultationSession.findUnique({
         where: { id: sessionId },
       });
@@ -42,17 +41,15 @@ export class MessagesService {
         throw new ForbiddenException('Access denied');
       }
     } else {
-      // Create new session if none provided
       session = await this.prisma.consultationSession.create({
         data: {
           userId,
-          mode: 'chat' as any,
+          mode: SessionMode.chat,
           title: 'Нова консультація',
         },
       });
     }
 
-    // Create user message
     const userMessage = await this.prisma.message.create({
       data: {
         sessionId: session.id,
@@ -63,7 +60,6 @@ export class MessagesService {
       },
     });
 
-    // Create assistant placeholder
     const assistantMessage = await this.prisma.message.create({
       data: {
         sessionId: session.id,
@@ -87,9 +83,8 @@ export class MessagesService {
     });
   }
 
-  private async processStream(messageId: string, subscriber: any) {
+  private async processStream(messageId: string, subscriber: Subscriber<StreamEvent>) {
     try {
-      // Get message and validate
       const message = await this.prisma.message.findUnique({
         where: { id: messageId },
         include: {
@@ -111,43 +106,37 @@ export class MessagesService {
         return;
       }
 
-      // Update status to streaming
       await this.prisma.message.update({
         where: { id: messageId },
         data: { status: MessageStatus.streaming },
       });
 
-      // Send meta event
       subscriber.next({
         event: 'meta',
         data: JSON.stringify({ messageId, status: 'streaming' }),
       });
 
-      // Format messages for LLM
       const conversationHistory = message.session.messages
         .filter((msg) => msg.role !== MessageRole.system)
         .map((msg) => ({
-          role: msg.role === MessageRole.user ? 'user' : 'assistant',
+          role: msg.role === MessageRole.user ? ('user' as const) : ('assistant' as const),
           content: msg.content,
           imageUrl: msg.imageUrl || undefined,
         }));
 
-      // Stream LLM response
       let fullResponse = '';
 
       for await (const token of this.llmService.streamResponse(
         message.session.id,
-        conversationHistory as any,
+        conversationHistory,
       )) {
         fullResponse += token;
-        // Ensure proper UTF-8 encoding by converting to string explicitly
         subscriber.next({
           event: 'token',
           data: String(token),
         });
       }
 
-      // Update message with final content
       await this.prisma.message.update({
         where: { id: messageId },
         data: {
@@ -156,7 +145,6 @@ export class MessagesService {
         },
       });
 
-      // Send done event
       subscriber.next({
         event: 'done',
         data: JSON.stringify({ messageId, status: 'done' }),
@@ -171,17 +159,15 @@ export class MessagesService {
         data: { status: MessageStatus.error },
       });
 
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+
       subscriber.next({
         event: 'error',
-        data: JSON.stringify({ error: error.message }),
+        data: JSON.stringify({ error: errorMessage }),
       });
 
       subscriber.error(error);
     }
-  }
-
-  private sleep(ms: number): Promise<void> {
-    return new Promise((resolve) => setTimeout(resolve, ms));
   }
 
   async getMessages(sessionId: string, userId: string): Promise<MessageResponseDto[]> {

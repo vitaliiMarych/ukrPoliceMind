@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { MessageList } from './MessageList';
 import { Composer } from './Composer';
@@ -25,51 +25,43 @@ export const ChatPage = () => {
     }
   }, [session]);
 
+  const onMessage = useCallback((content: string) => {
+    setStreamingContent((prev) => prev + content);
+  }, []);
+
+  const onComplete = useCallback((assistantMessageId: string) => {
+    setStreamingContent((currentContent) => {
+      if (currentContent && assistantMessageId) {
+        setMessages((prev) => {
+          if (prev.find((m) => m.id === assistantMessageId)) return prev;
+          return [
+            ...prev,
+            {
+              id: assistantMessageId,
+              role: 'assistant' as const,
+              content: currentContent,
+              createdAt: new Date().toISOString(),
+            },
+          ];
+        });
+      }
+      return '';
+    });
+    queryClient.invalidateQueries({ queryKey: ['sessions'] });
+  }, [queryClient]);
+
+  const onError = useCallback(() => {
+    setStreamingContent('');
+  }, []);
+
+  const { startStream, isStreaming } = useChatStream({ onMessage, onComplete, onError });
+
   const createSessionMutation = useMutation({
     mutationFn: chatApi.createSession,
     onSuccess: (newSession) => {
       setCurrentSessionId(newSession.id);
       setMessages([]);
       queryClient.invalidateQueries({ queryKey: ['sessions'] });
-    },
-  });
-
-  const { startStream, isStreaming } = useChatStream({
-    onMessage: (content) => {
-      console.log('[ChatPage] onMessage called with:', content);
-      setStreamingContent((prev) => {
-        const newContent = prev + content;
-        console.log('[ChatPage] Updated streaming content length:', newContent.length);
-        return newContent;
-      });
-    },
-    onComplete: (assistantMessageId) => {
-      console.log('[ChatPage] onComplete called with messageId:', assistantMessageId);
-      setStreamingContent((currentContent) => {
-        console.log('[ChatPage] Current content on complete:', currentContent);
-        if (currentContent && assistantMessageId) {
-          // Check if message already exists to prevent duplicates
-          setMessages((prev) => {
-            const existingMessage = prev?.find((m) => m.id === assistantMessageId);
-            if (existingMessage) {
-              console.log('[ChatPage] Message already exists, skipping duplicate');
-              return prev;
-            }
-            const assistantMessage: Message = {
-              id: assistantMessageId,
-              role: 'assistant',
-              content: currentContent,
-              createdAt: new Date().toISOString(),
-            };
-            return [...(prev || []), assistantMessage];
-          });
-        }
-        return '';
-      });
-    },
-    onError: (error) => {
-      console.error('Stream error:', error);
-      setStreamingContent('');
     },
   });
 
@@ -96,9 +88,7 @@ export const ChatPage = () => {
   const handleSendMessage = (message: string, image?: File) => {
     if (image) {
       const reader = new FileReader();
-      reader.onloadend = () => {
-        setPendingImagePreview(reader.result as string);
-      };
+      reader.onloadend = () => setPendingImagePreview(reader.result as string);
       reader.readAsDataURL(image);
     }
 
@@ -107,10 +97,6 @@ export const ChatPage = () => {
       sessionId: currentSessionId || undefined,
       image,
     });
-  };
-
-  const handleNewChat = () => {
-    createSessionMutation.mutate();
   };
 
   if (isLoading) {
@@ -128,7 +114,7 @@ export const ChatPage = () => {
           Чат-консультація
         </h1>
         <button
-          onClick={handleNewChat}
+          onClick={() => createSessionMutation.mutate()}
           disabled={createSessionMutation.isPending || isStreaming}
           className="px-4 py-2 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-semibold rounded-lg shadow-lg hover:shadow-blue-500/50 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2 text-sm"
         >

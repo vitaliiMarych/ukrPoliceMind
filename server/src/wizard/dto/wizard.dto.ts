@@ -1,4 +1,4 @@
-import { IsString, IsBoolean, IsObject, IsNotEmpty } from 'class-validator';
+import { IsString, IsBoolean, IsObject, IsNotEmpty, IsOptional } from 'class-validator';
 
 export class CreateWizardCategoryDto {
   @IsString()
@@ -14,25 +14,30 @@ export class CreateWizardCategoryDto {
   icon: string;
 
   @IsObject()
-  schemaJson: Record<string, any>;
+  schemaJson: Record<string, unknown>;
 
   @IsBoolean()
   isActive: boolean;
 }
 
 export class UpdateWizardCategoryDto {
+  @IsOptional()
   @IsString()
   title?: string;
 
+  @IsOptional()
   @IsString()
   description?: string;
 
+  @IsOptional()
   @IsString()
   icon?: string;
 
+  @IsOptional()
   @IsObject()
-  schemaJson?: Record<string, any>;
+  schemaJson?: Record<string, unknown>;
 
+  @IsOptional()
   @IsBoolean()
   isActive?: boolean;
 }
@@ -44,7 +49,7 @@ export class SubmitWizardDto {
 
   @IsObject()
   @IsNotEmpty()
-  answers: Record<string, any>;
+  answers: Record<string, string>;
 }
 
 export class WizardResponseDto {

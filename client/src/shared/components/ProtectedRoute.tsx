@@ -10,16 +10,7 @@ interface ProtectedRouteProps {
 export const ProtectedRoute = ({ children, requireAdmin = false }: ProtectedRouteProps) => {
   const { data: user, isLoading, error } = useCurrentUser();
 
-  console.log('[ProtectedRoute]', {
-    isLoading,
-    hasUser: !!user,
-    error: error?.message,
-    requireAdmin,
-    userRole: user?.role,
-  });
-
   if (isLoading) {
-    console.log('[ProtectedRoute] Loading user data...');
     return (
       <div className="flex items-center justify-center h-screen">
         <div className="text-lg text-gray-600">Завантаження...</div>
@@ -28,12 +19,10 @@ export const ProtectedRoute = ({ children, requireAdmin = false }: ProtectedRout
   }
 
   if (error || !user) {
-    console.log('[ProtectedRoute] No user or error, redirecting to /login');
     return <Navigate to="/login" replace />;
   }
 
   if (user.isBlocked) {
-    console.log('[ProtectedRoute] User is blocked');
     return (
       <div className="flex items-center justify-center h-screen">
         <div className="text-center">
@@ -45,10 +34,8 @@ export const ProtectedRoute = ({ children, requireAdmin = false }: ProtectedRout
   }
 
   if (requireAdmin && user.role !== UserRole.ADMIN) {
-    console.log('[ProtectedRoute] Admin required but user is not admin, redirecting to /chat');
     return <Navigate to="/chat" replace />;
   }
 
-  console.log('[ProtectedRoute] Access granted');
   return <>{children}</>;
 };

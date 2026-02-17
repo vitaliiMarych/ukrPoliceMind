@@ -13,8 +13,7 @@ import { CurrentUser, type CurrentUserPayload } from '../common/decorators/curre
 const imageStorage = diskStorage({
   destination: join(__dirname, '..', '..', 'uploads'),
   filename: (_req, file, cb) => {
-    const uniqueName = `${uuidv4()}${extname(file.originalname)}`;
-    cb(null, uniqueName);
+    cb(null, `${uuidv4()}${extname(file.originalname)}`);
   },
 });
 
@@ -29,11 +28,8 @@ export class ChatController {
   async getCurrentSession(
     @CurrentUser() user: CurrentUserPayload,
   ): Promise<SessionResponseDto | null> {
-    console.log('[ChatController] Getting current session for user:', user.userId);
     const sessions = await this.sessionsService.findAll(user.userId);
-    const currentSession = sessions.length > 0 ? sessions[0] : null;
-    console.log('[ChatController] Current session:', currentSession?.id || 'none');
-    return currentSession;
+    return sessions[0] ?? null;
   }
 
   @Post('sessions')
@@ -41,10 +37,7 @@ export class ChatController {
     @CurrentUser() user: CurrentUserPayload,
     @Body() dto: CreateSessionDto,
   ): Promise<SessionResponseDto> {
-    console.log('[ChatController] Creating new session for user:', user.userId);
-    const result = await this.sessionsService.create(user.userId, dto);
-    console.log('[ChatController] Session created:', result.id);
-    return result;
+    return this.sessionsService.create(user.userId, dto);
   }
 
   @Get('sessions/:id')
@@ -52,7 +45,6 @@ export class ChatController {
     @Param('id') id: string,
     @CurrentUser() user: CurrentUserPayload,
   ): Promise<SessionResponseDto> {
-    console.log('[ChatController] Getting session:', { userId: user.userId, sessionId: id });
     return this.sessionsService.findOne(id, user.userId);
   }
 
@@ -60,14 +52,8 @@ export class ChatController {
   @UseInterceptors(
     FileInterceptor('image', {
       storage: imageStorage,
-      fileFilter: (_req, file, cb) => {
-        if (file.mimetype.startsWith('image/')) {
-          cb(null, true);
-        } else {
-          cb(null, false);
-        }
-      },
-      limits: { fileSize: 10 * 1024 * 1024 }, // 10MB
+      fileFilter: (_req, file, cb) => cb(null, file.mimetype.startsWith('image/')),
+      limits: { fileSize: 10 * 1024 * 1024 },
     }),
   )
   async sendMessage(
@@ -76,22 +62,8 @@ export class ChatController {
     @UploadedFile() image?: Express.Multer.File,
   ): Promise<CreateMessageResponseDto> {
     const imageUrl = image ? `/uploads/${image.filename}` : undefined;
-
-    console.log('[ChatController] Sending message:', {
-      userId: user.userId,
-      sessionId: dto.sessionId || 'new',
-      messageLength: dto.message?.length || 0,
-      hasImage: !!image,
-    });
-
-    const result = await this.messagesService.createMessage(dto.sessionId, user.userId, {
+    return this.messagesService.createMessage(dto.sessionId, user.userId, {
       content: dto.message || '',
     }, imageUrl);
-
-    console.log('[ChatController] Message created:', {
-      userMessageId: result.userMessageId,
-      sessionId: result.sessionId,
-    });
-    return result;
   }
 }

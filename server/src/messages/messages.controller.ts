@@ -48,7 +48,6 @@ export class MessagesController {
     return this.messagesService.streamMessage(messageId).pipe(
       map((event: StreamEvent) => ({
         event: event.event,
-        // For token events, encode as base64 to preserve UTF-8
         data: event.event === 'token'
           ? JSON.stringify({ text: Buffer.from(event.data, 'utf8').toString('base64') })
           : event.data,

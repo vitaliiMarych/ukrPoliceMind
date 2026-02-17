@@ -74,7 +74,7 @@ export const HistoryPage = () => {
       ) : (
         <>
           <div className="space-y-4">
-            {data?.sessions?.map((session: any) => (
+            {data?.sessions?.map((session) => (
               <div
                 key={session.id}
                 className="bg-white rounded-2xl shadow-md border border-slate-200 p-6 hover:shadow-lg hover:border-blue-300 transition-all duration-200"

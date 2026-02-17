@@ -7,6 +7,13 @@ import { AuthResponseDto } from './dto/auth-response.dto';
 import { Public } from '../common/decorators/public.decorator';
 import { CurrentUser, type CurrentUserPayload } from '../common/decorators/current-user.decorator';
 
+const REFRESH_COOKIE_OPTIONS = {
+  httpOnly: true,
+  secure: process.env.NODE_ENV === 'production',
+  sameSite: 'strict' as const,
+  maxAge: 7 * 24 * 60 * 60 * 1000,
+};
+
 @Controller('auth')
 export class AuthController {
   constructor(private authService: AuthService) {}
@@ -18,18 +25,8 @@ export class AuthController {
     @Res({ passthrough: true }) response: Response,
   ): Promise<AuthResponseDto> {
     const result = await this.authService.register(dto);
-
-    // Set refresh token as httpOnly cookie
-    response.cookie('refreshToken', result['refreshToken'], {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'strict',
-      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
-    });
-
-    // Remove refreshToken from response body
+    response.cookie('refreshToken', result['refreshToken'], REFRESH_COOKIE_OPTIONS);
     delete result['refreshToken'];
-
     return result;
   }
 
@@ -41,18 +38,8 @@ export class AuthController {
     @Res({ passthrough: true }) response: Response,
   ): Promise<AuthResponseDto> {
     const result = await this.authService.login(dto);
-
-    // Set refresh token as httpOnly cookie
-    response.cookie('refreshToken', result['refreshToken'], {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'strict',
-      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
-    });
-
-    // Remove refreshToken from response body
+    response.cookie('refreshToken', result['refreshToken'], REFRESH_COOKIE_OPTIONS);
     delete result['refreshToken'];
-
     return result;
   }
 

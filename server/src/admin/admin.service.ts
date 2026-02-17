@@ -10,7 +10,6 @@ export class AdminService {
     private wizardService: WizardService,
   ) {}
 
-  // Users management
   async getUsers() {
     return this.prisma.user.findMany({
       select: {
@@ -38,7 +37,6 @@ export class AdminService {
     });
   }
 
-  // Sessions management
   async getAllSessions() {
     return this.prisma.consultationSession.findMany({
       include: {
@@ -87,7 +85,6 @@ export class AdminService {
     });
   }
 
-  // System config management
   async getSystemConfig() {
     return this.prisma.systemConfig.findMany({
       orderBy: { key: 'asc' },
@@ -102,7 +99,6 @@ export class AdminService {
     });
   }
 
-  // Stats
   async getStats() {
     const [totalUsers, totalSessions, totalMessages, activeSessions] = await Promise.all([
       this.prisma.user.count(),
@@ -111,21 +107,15 @@ export class AdminService {
       this.prisma.consultationSession.count({
         where: {
           updatedAt: {
-            gte: new Date(Date.now() - 24 * 60 * 60 * 1000), // Last 24h
+            gte: new Date(Date.now() - 24 * 60 * 60 * 1000),
           },
         },
       }),
     ]);
 
-    return {
-      totalUsers,
-      totalSessions,
-      totalMessages,
-      activeSessions,
-    };
+    return { totalUsers, totalSessions, totalMessages, activeSessions };
   }
 
-  // LLM Logs
   async getLlmLogs(limit = 100) {
     return this.prisma.llmLog.findMany({
       include: {
@@ -142,7 +132,6 @@ export class AdminService {
     });
   }
 
-  // Wizard categories (delegate to WizardService)
   async createWizardCategory(dto: CreateWizardCategoryDto) {
     return this.wizardService.createCategory(dto);
   }

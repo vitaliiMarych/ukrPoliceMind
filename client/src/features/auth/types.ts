@@ -1,6 +1,5 @@
 import { z } from 'zod';
 
-// Login schema
 export const loginSchema = z.object({
   email: z.string().email('Некоректна email адреса'),
   password: z.string().min(6, 'Пароль має бути не менше 6 символів'),
@@ -8,7 +7,6 @@ export const loginSchema = z.object({
 
 export type LoginFormData = z.infer<typeof loginSchema>;
 
-// Register schema
 export const registerSchema = z.object({
   email: z.string().email('Некоректна email адреса'),
   password: z.string().min(6, 'Пароль має бути не менше 6 символів'),
@@ -18,18 +16,7 @@ export const registerSchema = z.object({
 
 export type RegisterFormData = z.infer<typeof registerSchema>;
 
-export interface LoginResponse {
-  accessToken: string;
-  user: {
-    id: string;
-    email: string;
-    firstName?: string;
-    lastName?: string;
-    role: string;
-  };
-}
-
-export interface RegisterResponse {
+export interface AuthResponse {
   accessToken: string;
   user: {
     id: string;

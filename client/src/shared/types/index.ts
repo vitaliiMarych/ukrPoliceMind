@@ -1,5 +1,3 @@
-// Shared types across the application
-
 export const UserRole = {
   USER: 'USER',
   ADMIN: 'ADMIN',
