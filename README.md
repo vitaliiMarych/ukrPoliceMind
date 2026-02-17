@@ -6,17 +6,15 @@
 - **Чат** — вільний діалог з AI
 - **Майстер** — покрокова анкета по конкретній ситуації (трудове право, житлові питання, сімейне право)
 
-Є адмін-панель: статистика, управління користувачами, логи AI-запитів.
-
 ## Стек
 
-| Backend | Frontend |
-|---------|----------|
-| Node.js + NestJS | React 19 + TypeScript |
-| PostgreSQL + Prisma ORM | Vite |
-| JWT авторизація | Tailwind CSS |
-| Google Gemini AI | React Query + Axios |
-| SSE стрімінг | React Hook Form + Zod |
+| Backend                 | Frontend       
+|-------------------------|----------------------
+| Node.js + NestJS        | React 19 + TypeScript 
+| PostgreSQL + Prisma ORM | Vite 
+| JWT авторизація         | Tailwind CSS 
+| Google Gemini AI        | React Query + Axios 
+| SSE стрімінг            | React Hook Form + Zod 
 
 ## Що потрібно встановити
 
